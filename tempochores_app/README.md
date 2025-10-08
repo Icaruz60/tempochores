@@ -4,13 +4,13 @@ A new Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+---Folder Structure---
+Ignore all folders except for /assets (where we put pictures etc) and /lib (where the actual code lies)
 
-A few resources to get you started if this is your first Flutter project:
+/lib
+-/pages -> where all the different pages sit
+-/shared -> reoccuring pieces are saved here (ex: a specific button styling used across the app)
+-/theme -> the apps theme is defined here
+main.dart -> controls the app and routing. If you add a new page you need to add it here
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---More to come---
