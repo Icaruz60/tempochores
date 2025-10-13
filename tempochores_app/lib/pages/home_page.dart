@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tempochores_app/theme/app_theme.dart';
 import 'package:tempochores_app/theme/colors.dart';
-import 'package:tempochores_app/shared/components/menu_button.dart';
+import 'package:tempochores_app/components/menu_button.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -14,7 +14,7 @@ class HomePage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/images/TempoTaskLogo.png', height: 40),
+            Image.asset('assets/images/TempoChoresLogo.png', height: 40),
             const SizedBox(width: 2),
             const Text('TempoChores'),
           ],
@@ -37,7 +37,7 @@ class HomePage extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, '/plan'),
             ),
             MenuButton(
-              title: 'Edit Chores',
+              title: 'Add/Edit Chores',
               imageAsset: 'assets/images/editchore_bg.jpg',
               onPressed: () => Navigator.pushNamed(context, '/edit'),
             ),

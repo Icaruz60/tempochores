@@ -4,8 +4,11 @@ import 'package:tempochores_app/pages/time_chore_page.dart';
 import 'package:tempochores_app/pages/plan_tempochore_page.dart';
 import 'package:tempochores_app/pages/edit_chores_page.dart';
 import 'package:tempochores_app/theme/app_theme.dart';
+import 'package:tempochores_app/components/storage_init.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageInit.ensureInitialized();
   runApp(const TempoChoresApp());
 }
 

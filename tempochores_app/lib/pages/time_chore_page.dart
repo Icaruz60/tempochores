@@ -11,7 +11,7 @@ class TimeChorePage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/images/TempoTaskLogo.png', height: 40),
+            Image.asset('assets/images/TempoChoresLogo.png', height: 40),
             const SizedBox(width: 2),
             const Text('Time Chore'),
           ],
