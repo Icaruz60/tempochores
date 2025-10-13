@@ -13,7 +13,7 @@ class EditChoresPage extends StatelessWidget {
           children: [
             Image.asset('assets/images/TempoTaskLogo.png', height: 40),
             const SizedBox(width: 2),
-            const Text('TempoChores'),
+            const Text('Edit Chores'),
           ],
         ),
         centerTitle: true,

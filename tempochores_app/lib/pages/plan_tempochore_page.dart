@@ -13,7 +13,7 @@ class PlanTempoChorePage extends StatelessWidget {
           children: [
             Image.asset('assets/images/TempoTaskLogo.png', height: 40),
             const SizedBox(width: 2),
-            const Text('TempoChores'),
+            const Text('Plan TempoChore'),
           ],
         ),
         centerTitle: true,
