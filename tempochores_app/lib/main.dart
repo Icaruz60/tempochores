@@ -3,6 +3,7 @@ import 'package:tempochores_app/pages/home_page.dart';
 import 'package:tempochores_app/pages/time_chore_page.dart';
 import 'package:tempochores_app/pages/plan_tempochore_page.dart';
 import 'package:tempochores_app/pages/edit_chores_page.dart';
+import 'package:tempochores_app/theme/app_theme.dart';
 
 void main() {
   runApp(const TempoChoresApp());
@@ -16,10 +17,11 @@ class TempoChoresApp extends StatelessWidget {
     return MaterialApp(
       title: 'TempoChores',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'Poppins', primarySwatch: Colors.blue),
+      theme: AppTheme.theme,
       initialRoute: '/',
       routes: {
-        '/pages/home_page': (context) => const HomePage(),
+        '/': (context) => const HomePage(),
+        '/home_page': (context) => const HomePage(),
         '/time': (context) => const TimeChorePage(),
         '/plan': (context) => const PlanTempoChorePage(),
         '/edit': (context) => const EditChoresPage(),
