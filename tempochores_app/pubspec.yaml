@@ -76,6 +76,9 @@ flutter:
     - family: "bbh_sans_bogle"
       fonts:
         - asset: assets/fonts/BBHSansBogle-Regular.ttf
+    - family: "ChakraPetch"
+      fonts:
+        - asset: assets/fonts/ChakraPetch-Regular.ttf
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
