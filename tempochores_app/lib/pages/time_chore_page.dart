@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tempochores_app/components/boxes.dart';
 import 'package:tempochores_app/components/timer_control_bar.dart';
 import 'package:tempochores_app/components/timer.dart';
-import 'package:tempochores_app/models/chore.dart';
 import 'package:tempochores_app/theme/colors.dart';
 import 'package:tempochores_app/components/chore_dropdown.dart';
 

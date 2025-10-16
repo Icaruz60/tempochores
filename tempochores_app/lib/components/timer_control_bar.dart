@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tempochores_app/theme/colors.dart';
 
 /// Control bar that shows a big Start button initially,
 /// then switches to [Cancel] [Done!] [Pause] row while running.
