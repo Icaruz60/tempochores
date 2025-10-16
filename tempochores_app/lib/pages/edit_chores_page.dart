@@ -246,6 +246,7 @@ class _ChoreTile extends StatelessWidget {
                       chore.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppColors.secondary,
+                        fontSize: 20,
                         shadows: [
                           Shadow(
                             offset: Offset(3, 3),
