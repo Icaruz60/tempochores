@@ -131,6 +131,30 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
         }
         return false;
       }
+
+      // stop loop if time runs out
+      if (!timer.running && timer.remaining == Duration.zero) {
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Time’s up!'),
+              content: const Text('You ran out of time. Try again next session!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _resetAll();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+        return false;
+      }
+
       return true;
     });
   }
@@ -210,11 +234,13 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
             Text(
               timer.running
                   ? '${timer.remaining.inMinutes}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
-                  : 'Timer stopped',
+                  : (timer.remaining > Duration.zero
+                      ? ''
+                      : 'Timer stopped'),
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
 
-            //  CHORES LIST 
+            // CHORES LIST
             SizedBox(
               width: MediaQuery.sizeOf(context).width * 0.9,
               height: MediaQuery.sizeOf(context).height * 0.4,
@@ -239,13 +265,13 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
               ),
             ),
 
-            //ACTION BUTTONS 
+            // ACTION BUTTONS
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (!_timerRunning) ...[
+                  if (!_timerRunning && !_hasLoaded)
                     Expanded(
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -270,6 +296,7 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
                         ),
                       ),
                     ),
+                  if (!_timerRunning)
                     Expanded(
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -299,8 +326,8 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
                           ),
                         ),
                       ),
-                    ),
-                  ] else
+                    )
+                  else
                     Expanded(
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
