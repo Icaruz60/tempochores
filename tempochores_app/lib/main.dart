@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tempochores_app/pages/home_page.dart';
 import 'package:tempochores_app/pages/time_chore_page.dart';
 import 'package:tempochores_app/pages/plan_tempochore_page.dart';
 import 'package:tempochores_app/pages/edit_chores_page.dart';
 import 'package:tempochores_app/theme/app_theme.dart';
 import 'package:tempochores_app/components/storage_init.dart';
+import 'package:tempochores_app/providers/timer_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageInit.ensureInitialized();
-  runApp(const TempoChoresApp());
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TimerProvider()..restoreState(),
+      child: const TempoChoresApp(),
+    ),
+  );
 }
 
 class TempoChoresApp extends StatelessWidget {

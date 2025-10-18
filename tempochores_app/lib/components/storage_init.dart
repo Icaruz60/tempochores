@@ -1,4 +1,5 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:tempochores_app/models/chore.dart';
 import 'package:tempochores_app/models/priority.dart';
 
@@ -10,14 +11,15 @@ class StorageInit {
     if (_initialized) return;
     _initialized = true;
 
-    await Hive.initFlutter();
+    final dir = await getApplicationDocumentsDirectory();
+    Hive.init(dir.path);
 
-    // Register adapters once
     Hive
       ..registerAdapter(ChoreAdapter())
       ..registerAdapter(PriorityAdapter());
 
-    // Open boxes you’ll use across the app
     await Hive.openBox<Chore>(choreBoxName);
+    await Hive.openBox('timer_state');
+    await Hive.openBox('plan_state');
   }
 }

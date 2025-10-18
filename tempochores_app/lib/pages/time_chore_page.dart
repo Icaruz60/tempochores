@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:tempochores_app/components/boxes.dart';
 import 'package:tempochores_app/components/timer_control_bar.dart';
 import 'package:tempochores_app/components/timer.dart';
 import 'package:tempochores_app/theme/colors.dart';
 import 'package:tempochores_app/components/chore_dropdown.dart';
+import 'package:tempochores_app/models/chore.dart';
 
 class TimeChorePage extends StatefulWidget {
   const TimeChorePage({super.key});
@@ -14,6 +16,72 @@ class TimeChorePage extends StatefulWidget {
 
 class _TimeChorePageState extends State<TimeChorePage> {
   String? _selectedChoreId;
+  bool _timerRunning = false;
+  Duration _elapsed = Duration.zero;
+  final TimerController _timerCtrl = TimerController();
+
+  void _handleStart() {
+    setState(() {
+      _timerRunning = true;
+      _elapsed = Duration.zero;
+    });
+    _timerCtrl.reset(Duration.zero);
+    _timerCtrl.start();
+  }
+
+  void _handleCancel() {
+    setState(() {
+      _timerRunning = false;
+      _elapsed = Duration.zero;
+    });
+    _timerCtrl.reset(Duration.zero);
+  }
+
+  Future<void> _handleDone() async {
+    setState(() => _timerRunning = false);
+    _timerCtrl.pause();
+
+    if (_selectedChoreId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a chore first.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final box = Boxes.chores();
+    final chore = box.get(_selectedChoreId);
+
+    if (chore != null) {
+      chore.addTime(_elapsed);
+      await chore.save();
+
+      final mins = _elapsed.inMinutes;
+      final secs = _elapsed.inSeconds % 60;
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Recorded ${mins}m ${secs}s for "${chore.name}"!',
+              style: const TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.green[700],
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      setState(() {}); // Refresh manually if needed
+    }
+  }
+
+  void _handlePause() {
+    setState(() => _timerRunning = !_timerRunning);
+    _timerCtrl.pause();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +102,7 @@ class _TimeChorePageState extends State<TimeChorePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             SizedBox(
               width: MediaQuery.sizeOf(context).width * 0.90,
               height: MediaQuery.sizeOf(context).height * 0.20,
@@ -46,7 +114,6 @@ class _TimeChorePageState extends State<TimeChorePage> {
                   setState(() {
                     _selectedChoreId = chore?.id;
                   });
-                  // do whatever else you need with the Chore
                 },
               ),
             ),
@@ -64,34 +131,10 @@ class _TimeChorePageState extends State<TimeChorePage> {
               width: MediaQuery.sizeOf(context).width * 0.9,
               height: MediaQuery.sizeOf(context).height * 0.2,
               child: TimerControlBar(
-                onStart: () {
-                  setState(() {
-                    _timerRunning = true;
-                    _elapsed = Duration.zero;
-                  });
-                  _timerCtrl.reset(Duration.zero);
-                  _timerCtrl.start();
-                },
-                onCancel: () {
-                  setState(() {
-                    _timerRunning = false;
-                    _elapsed = Duration.zero;
-                    _timerCtrl.reset(Duration.zero);
-                  });
-                },
-                onDone: () async {
-                  setState(() => _timerRunning = false);
-                  _timerCtrl.pause();
-                  final box = Boxes.chores();
-                  final chore = box.get(
-                    _selectedChoreId,
-                  ); // or however you fetch it
-                  chore?.addTime(_elapsed);
-                },
-                onPause: () {
-                  setState(() => _timerRunning = _timerRunning ? false : true);
-                  _timerCtrl.pause();
-                },
+                onStart: _handleStart,
+                onCancel: _handleCancel,
+                onDone: _handleDone,
+                onPause: _handlePause,
               ),
             ),
           ],
@@ -100,7 +143,3 @@ class _TimeChorePageState extends State<TimeChorePage> {
     );
   }
 }
-
-late final TimerController _timerCtrl = TimerController();
-bool _timerRunning = false;
-Duration _elapsed = Duration.zero;

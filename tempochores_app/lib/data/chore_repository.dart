@@ -64,4 +64,24 @@ class ChoreRepository {
   }
 
   Stream<BoxEvent> watch() => _box.watch();
+
+  List<Chore> getPrioritizedChores(Duration availableTime) {
+    final all = getAll(sortByPriorityThenName: true);
+    final selected = <Chore>[];
+    var remaining = availableTime;
+
+    // Go through each priority in order
+    for (final priority in [Priority.high, Priority.medium, Priority.low]) {
+      final samePriority = all.where((c) => c.priority == priority);
+
+      for (final chore in samePriority) {
+        final avg = chore.averageDuration;
+        if (avg <= remaining) {
+          selected.add(chore);
+          remaining -= avg;
+        }
+      }
+    }
+    return selected;
+  }
 }
