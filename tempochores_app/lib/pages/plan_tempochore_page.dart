@@ -77,7 +77,7 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
 
     for (final c in [...high, ...med, ...low]) {
       final dur = c.averageDuration;
-      if (dur.inMinutes > 0 && dur <= remaining) {
+      if (dur.inSeconds > 0 && dur <= remaining) {
         chosen.add(c);
         remaining -= dur;
       }
@@ -233,7 +233,7 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
             // TIMER DISPLAY
             Text(
               timer.running
-                  ? '${timer.remaining.inMinutes}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
+                  ? '${timer.remaining.inSeconds}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
                   : (timer.remaining > Duration.zero
                       ? ''
                       : 'Timer stopped'),
