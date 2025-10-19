@@ -233,7 +233,7 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
             // TIMER DISPLAY
             Text(
               timer.running
-                  ? '${timer.remaining.inSeconds}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
+                  ? '${timer.remaining.inMinutes}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
                   : (timer.remaining > Duration.zero
                       ? ''
                       : 'Timer stopped'),
