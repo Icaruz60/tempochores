@@ -1,24 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tempochores_app/pages/home_page.dart';
-import 'package:tempochores_app/pages/time_chore_page.dart';
-import 'package:tempochores_app/pages/plan_tempochore_page.dart';
-import 'package:tempochores_app/pages/edit_chores_page.dart';
-import 'package:tempochores_app/theme/app_theme.dart';
-import 'package:tempochores_app/components/storage_init.dart';
-import 'package:tempochores_app/providers/timer_provider.dart';
+import 'package:tempochores_app/tempochorespager.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await StorageInit.ensureInitialized();
-
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => TimerProvider()..restoreState(),
-      child: const TempoChoresApp(),
-    ),
-  );
-}
+void main() => runApp(const TempoChoresApp());
 
 class TempoChoresApp extends StatelessWidget {
   const TempoChoresApp({super.key});
@@ -28,15 +11,11 @@ class TempoChoresApp extends StatelessWidget {
     return MaterialApp(
       title: 'TempoChores',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomePage(),
-        '/home_page': (context) => const HomePage(),
-        '/time': (context) => const TimeChorePage(),
-        '/plan': (context) => const PlanTempoChorePage(),
-        '/edit': (context) => const EditChoresPage(),
-      },
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00E676)),
+        useMaterial3: true,
+      ),
+      home: const TempoChoresPager(),
     );
   }
 }
