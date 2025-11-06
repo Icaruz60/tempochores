@@ -14,3 +14,6 @@ Ignore all folders except for /assets (where we put pictures etc) and /lib (wher
 main.dart -> controls the app and routing. If you add a new page you need to add it here
 
 ---More to come---
+
+to start app:
+flutter run
