@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 class TimerProvider extends ChangeNotifier {
+  static const _timerStateBox = 'timer_state';
+
   Timer? _timer;
   Duration _remaining = Duration.zero;
   Duration _elapsed = Duration.zero; //  true elapsed time tracker
@@ -66,7 +68,7 @@ class TimerProvider extends ChangeNotifier {
 
   // SAVE STATE 
   Future<void> saveState() async {
-    final box = await Hive.openBox('timer_state');
+    final box = Hive.box(_timerStateBox);
     await box.put('remaining', _remaining.inSeconds);
     await box.put('elapsed', _elapsed.inSeconds);
     await box.put('initialRemaining', _initialRemaining?.inSeconds ?? 0);
@@ -76,7 +78,7 @@ class TimerProvider extends ChangeNotifier {
 
   // RESTORE STATE
   Future<void> restoreState() async {
-    final box = await Hive.openBox('timer_state');
+    final box = Hive.box(_timerStateBox);
     final running = box.get('running', defaultValue: false);
     final remainingSeconds = box.get('remaining', defaultValue: 0);
     final elapsedSeconds = box.get('elapsed', defaultValue: 0);

@@ -58,7 +58,10 @@ class _TimeSliderState extends State<TimeSlider> {
               height: 40,
               width: widget.width,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),

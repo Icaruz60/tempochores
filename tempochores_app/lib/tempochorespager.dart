@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '/pages/plan_tempochore_page.dart';
-import '/pages/time_chore_page.dart';
-import '/pages/edit_chores_page.dart';
+import 'package:tempochores_app/pages/edit_chores_page.dart';
+import 'package:tempochores_app/pages/plan_tempochore_page.dart';
+import 'package:tempochores_app/pages/time_chore_page.dart';
 
 class TempoChoresPager extends StatefulWidget {
   const TempoChoresPager({super.key});

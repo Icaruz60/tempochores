@@ -27,7 +27,7 @@ class ChoreDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final box = Boxes.chores();
+    final box = Boxes.choresBox;
 
     return ValueListenableBuilder(
       valueListenable: box.listenable(),
@@ -62,7 +62,7 @@ class ChoreDropdown extends StatelessWidget {
         final border = OutlineInputBorder(
           borderRadius: BorderRadius.circular(5),
           borderSide: BorderSide(
-            color: AppColors.secondary.withOpacity(0.4),
+            color: AppColors.secondary.withValues(alpha: 0.4),
             width: 1,
           ),
         );
@@ -250,7 +250,7 @@ class _PriorityPillMini extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color, width: 1),
       ),
@@ -281,7 +281,7 @@ class _StatsBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.12),
+        color: Colors.black.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

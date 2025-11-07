@@ -1,25 +1,53 @@
-import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:tempochores_app/models/chore.dart';
-import 'package:tempochores_app/models/priority.dart';
+// lib/components/storage_init.dart
+import 'package:flutter/widgets.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class StorageInit {
-  static bool _initialized = false;
-  static const String choreBoxName = 'chores';
+typedef AdapterRegistrar = void Function();
 
-  static Future<void> ensureInitialized() async {
-    if (_initialized) return;
-    _initialized = true;
+class AppStorage {
+  static bool _ready = false;
+  static Future<void>? _boot;
 
-    final dir = await getApplicationDocumentsDirectory();
-    Hive.init(dir.path);
-
-    Hive
-      ..registerAdapter(ChoreAdapter())
-      ..registerAdapter(PriorityAdapter());
-
-    await Hive.openBox<Chore>(choreBoxName);
-    await Hive.openBox('timer_state');
-    await Hive.openBox('plan_state');
+  /// Call once at app start. Safe to call multiple times.
+  static Future<void> init({
+    required List<String> boxes,
+    AdapterRegistrar? registerAdapters,
+    Map<String, Future<void> Function()>? customOpeners,
+  }) {
+    return _boot ??= _initImpl(
+      boxes: boxes,
+      registerAdapters: registerAdapters,
+      customOpeners: customOpeners,
+    );
   }
+
+  static Future<void> _initImpl({
+    required List<String> boxes,
+    AdapterRegistrar? registerAdapters,
+    Map<String, Future<void> Function()>? customOpeners,
+  }) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
+
+    // Optional hook so you can register adapters in main.dart without coupling.
+    if (registerAdapters != null) {
+      registerAdapters();
+    }
+
+    for (final name in boxes) {
+      if (Hive.isBoxOpen(name)) continue;
+      final opener = customOpeners?[name];
+      if (opener != null) {
+        await opener();
+        continue;
+      }
+      await Hive.openBox(name);
+    }
+    _ready = true;
+  }
+
+  static bool get isReady => _ready;
+
+  /// Use AFTER init. Synchronous access to already-opened boxes.
+  static Box<T> box<T>(String name) => Hive.box<T>(name);
 }

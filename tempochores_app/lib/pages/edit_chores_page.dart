@@ -16,7 +16,7 @@ class EditChoresPage extends StatefulWidget {
 class _EditChoresPageState extends State<EditChoresPage> {
   @override
   Widget build(BuildContext context) {
-    final box = Boxes.chores();
+    final box = Boxes.choresBox;
 
     return Scaffold(
       appBar: AppBar(
@@ -130,7 +130,7 @@ class _EditChoresPageState extends State<EditChoresPage> {
   }
 
   Future<void> _showChoreDialog(BuildContext context, {Chore? existing}) async {
-    final box = Boxes.chores();
+    final box = Boxes.choresBox;
 
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     var priority = existing?.priority ?? Priority.medium;
@@ -369,7 +369,7 @@ class _PriorityPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color, width: 1),
       ),

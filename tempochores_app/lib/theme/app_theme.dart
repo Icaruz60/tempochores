@@ -15,12 +15,10 @@ class AppTheme {
       colorScheme: ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        background: AppColors.backgroundBase,
         surface: AppColors.backgroundRaised,
         error: AppColors.stateDanger,
         onPrimary: AppColors.textPrimary,
         onSecondary: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
         onSurface: AppColors.textPrimary,
         onError: AppColors.textPrimary,
       ),

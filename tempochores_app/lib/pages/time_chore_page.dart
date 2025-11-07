@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:tempochores_app/components/boxes.dart';
 import 'package:tempochores_app/components/timer_control_bar.dart';
 import 'package:tempochores_app/components/timer.dart';
 import 'package:tempochores_app/theme/colors.dart';
 import 'package:tempochores_app/components/chore_dropdown.dart';
-import 'package:tempochores_app/models/chore.dart';
 
 class TimeChorePage extends StatefulWidget {
   const TimeChorePage({super.key});
@@ -51,28 +49,27 @@ class _TimeChorePageState extends State<TimeChorePage> {
       return;
     }
 
-    final box = Boxes.chores();
+    final box = Boxes.choresBox;
     final chore = box.get(_selectedChoreId);
 
     if (chore != null) {
       chore.addTime(_elapsed);
       await chore.save();
+      if (!mounted) return;
 
       final mins = _elapsed.inMinutes;
       final secs = _elapsed.inSeconds % 60;
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Recorded ${mins}m ${secs}s for "${chore.name}"!',
-              style: const TextStyle(fontSize: 16),
-            ),
-            backgroundColor: Colors.green[700],
-            duration: const Duration(seconds: 2),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Recorded ${mins}m ${secs}s for "${chore.name}"!',
+            style: const TextStyle(fontSize: 16),
           ),
-        );
-      }
+          backgroundColor: Colors.green[700],
+          duration: const Duration(seconds: 2),
+        ),
+      );
 
       setState(() {}); // Refresh manually if needed
     }
@@ -116,7 +113,7 @@ class _TimeChorePageState extends State<TimeChorePage> {
                   });
                 },
               ),
-            ), 
+            ),
             SizedBox(
               width: MediaQuery.sizeOf(context).width * 0.9,
               height: MediaQuery.sizeOf(context).height * 0.2,

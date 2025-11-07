@@ -6,12 +6,12 @@ import 'package:tempochores_app/theme/colors.dart';
 class TimerController {
   void Function()? _start;
   void Function()? _pause;
-  void Function([Duration])? _reset;
+  void Function([Duration duration])? _reset;
 
   void _attach({
     required void Function() start,
     required void Function() pause,
-    required void Function([Duration]) reset,
+    required void Function([Duration duration]) reset,
   }) {
     _start = start;
     _pause = pause;
@@ -54,9 +54,9 @@ class _TimerDisplayState extends State<TimerDisplay> {
     widget.controller?._attach(
       start: _start,
       pause: _stop,
-      reset: ([_d = Duration.zero]) {
+      reset: ([Duration duration = Duration.zero]) {
         _stop();
-        setState(() => _elapsed = _d);
+        setState(() => _elapsed = duration);
       },
     );
     if (widget.running) _start();
@@ -77,9 +77,9 @@ class _TimerDisplayState extends State<TimerDisplay> {
       widget.controller!._attach(
         start: _start,
         pause: _stop,
-        reset: ([_d = Duration.zero]) {
+        reset: ([Duration duration = Duration.zero]) {
           _stop();
-          setState(() => _elapsed = _d);
+          setState(() => _elapsed = duration);
         },
       );
     }

@@ -34,10 +34,10 @@ class _ChoresSelectorState extends State<ChoresSelector> {
   @override
   void initState() {
     super.initState();
-    _searchCtrl = TextEditingController()
-      ..addListener(() {
-        setState(() => _query = _searchCtrl.text.trim().toLowerCase());
-      });
+    _searchCtrl =
+        TextEditingController()..addListener(() {
+          setState(() => _query = _searchCtrl.text.trim().toLowerCase());
+        });
   }
 
   @override
@@ -51,11 +51,12 @@ class _ChoresSelectorState extends State<ChoresSelector> {
     final timer = context.read<TimerProvider>();
     final selected = widget.selectedIds;
 
-    final filtered = _query.isEmpty
-        ? widget.items
-        : widget.items
-            .where((c) => c.name.toLowerCase().contains(_query))
-            .toList();
+    final filtered =
+        _query.isEmpty
+            ? widget.items
+            : widget.items
+                .where((c) => c.name.toLowerCase().contains(_query))
+                .toList();
 
     return Column(
       children: [
@@ -74,124 +75,130 @@ class _ChoresSelectorState extends State<ChoresSelector> {
           ),
         const Divider(height: 0),
         Expanded(
-          child: filtered.isEmpty
-              ? Center(
-                  child: Text(
-                    widget.emptyLabel,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const Divider(height: 0),
-                  itemBuilder: (context, index) {
-                    final chore = filtered[index];
-                    final isChecked = selected.contains(chore.id);
+          child:
+              filtered.isEmpty
+                  ? Center(
+                    child: Text(
+                      widget.emptyLabel,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                  )
+                  : ListView.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const Divider(height: 0),
+                    itemBuilder: (context, index) {
+                      final chore = filtered[index];
+                      final isChecked = selected.contains(chore.id);
 
-                    return CheckboxListTile(
-                      value: isChecked,
-                      onChanged: (checked) async {
-                        final next = Set<String>.from(selected);
+                      return CheckboxListTile(
+                        value: isChecked,
+                        onChanged: (checked) async {
+                          final next = Set<String>.from(selected);
 
-                        if (checked == true) {
-                          next.add(chore.id);
+                          if (checked == true) {
+                            next.add(chore.id);
 
-                          // Record time only if timer is active
-                          if (timer.running) {
-                            final elapsed = timer.consumeElapsed();
+                            // Record time only if timer is active
+                            if (timer.running) {
+                              final elapsed = timer.consumeElapsed();
 
-                            if (elapsed.inSeconds > 0) {
-                              final box = Hive.box<Chore>('chores');
-                              final c = box.get(chore.id);
-                              if (c != null) {
-                                c.addTime(elapsed);
-                                await c.save();
+                              if (elapsed.inSeconds > 0) {
+                                final box = Hive.box<Chore>('chores');
+                                final c = box.get(chore.id);
+                                if (c != null) {
+                                  c.addTime(elapsed);
+                                  await c.save();
 
-                                final mins = elapsed.inMinutes;
-                                final secs = elapsed.inSeconds % 60;
+                                  final mins = elapsed.inMinutes;
+                                  final secs = elapsed.inSeconds % 60;
 
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Added ${mins}m ${secs}s to "${c.name}"!',
-                                        style: const TextStyle(fontSize: 16),
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Added ${mins}m ${secs}s to "${c.name}"!',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        backgroundColor: Colors.green[700],
+                                        duration: const Duration(
+                                          milliseconds: 1800,
+                                        ),
                                       ),
-                                      backgroundColor: Colors.green[700],
-                                      duration:
-                                          const Duration(milliseconds: 1800),
-                                    ),
+                                    );
+                                  }
+                                }
+                              }
+
+                              // Move completed chore to bottom for clarity
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) {
+                                  final idx = widget.items.indexWhere(
+                                    (c) => c.id == chore.id,
                                   );
+                                  if (idx != -1) {
+                                    final done = widget.items.removeAt(idx);
+                                    widget.items.add(done);
+                                    setState(() {}); // refresh UI
+                                  }
                                 }
-                              }
+                              });
                             }
-
-                            // Move completed chore to bottom for clarity
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                final idx = widget.items
-                                    .indexWhere((c) => c.id == chore.id);
-                                if (idx != -1) {
-                                  final done = widget.items.removeAt(idx);
-                                  widget.items.add(done);
-                                  setState(() {}); // refresh UI
-                                }
-                              }
-                            });
+                          } else {
+                            next.remove(chore.id);
                           }
-                        } else {
-                          next.remove(chore.id);
-                        }
 
-                        widget.onChanged(next);
-                      },
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12),
-                      dense: true,
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              chore.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: isChecked
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                decoration: isChecked
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                shadows: const [
-                                  Shadow(
+                          widget.onChanged(next);
+                        },
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                        ),
+                        dense: true,
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                chore.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight:
+                                      isChecked
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                  decoration:
+                                      isChecked
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                  shadows: const [
+                                    Shadow(
                                       offset: Offset(3, 3),
                                       blurRadius: 5,
-                                      color: Colors.black54),
-                                  Shadow(
+                                      color: Colors.black54,
+                                    ),
+                                    Shadow(
                                       offset: Offset(-3, -3),
                                       blurRadius: 5,
-                                      color: Colors.black54),
-                                ],
+                                      color: Colors.black54,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          _PriorityPill(priority: chore.priority),
-                        ],
-                      ),
-                      subtitle: Text(
-                        _fmtDurationShort(chore.averageDuration),
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: Theme.of(context).hintColor),
-                      ),
-                    );
-                  },
-                ),
+                            const SizedBox(width: 8),
+                            _PriorityPill(priority: chore.priority),
+                          ],
+                        ),
+                        subtitle: Text(
+                          _fmtDurationShort(chore.averageDuration),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: Theme.of(context).hintColor),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ],
     );
@@ -218,16 +225,18 @@ class _PriorityPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: ShapeDecoration(
-        color: color.withOpacity(0.12),
-        shape: StadiumBorder(side: BorderSide(color: color.withOpacity(0.6))),
+        color: color.withValues(alpha: 0.12),
+        shape: StadiumBorder(
+          side: BorderSide(color: color.withValues(alpha: 0.6)),
+        ),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
