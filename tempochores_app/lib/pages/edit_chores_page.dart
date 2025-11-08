@@ -129,21 +129,24 @@ class _EditChoresPageState extends State<EditChoresPage> {
         false;
   }
 
-  Future<void> _showChoreDialog(BuildContext context, {Chore? existing}) async {
-    final box = Boxes.choresBox;
+Future<void> _showChoreDialog(BuildContext context, {Chore? existing}) async {
+  final box = Boxes.choresBox;
 
-    final nameCtrl = TextEditingController(text: existing?.name ?? '');
-    var priority = existing?.priority ?? Priority.medium;
+  final nameCtrl = TextEditingController(text: existing?.name ?? '');
+  var priority = existing?.priority ?? Priority.medium;
 
-    await showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
             title: Text(existing == null ? 'Add Chore' : 'Edit Chore'),
             content: SizedBox(
               width: 380,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
                     controller: nameCtrl,
@@ -154,19 +157,98 @@ class _EditChoresPageState extends State<EditChoresPage> {
                   DropdownButtonFormField<Priority>(
                     value: priority,
                     decoration: const InputDecoration(labelText: 'Priority'),
-                    items:
-                        Priority.values
-                            .map(
-                              (p) => DropdownMenuItem(
-                                value: p,
-                                child: Text(
-                                  p.name[0].toUpperCase() + p.name.substring(1),
-                                ),
-                              ),
-                            )
-                            .toList(),
+                    items: Priority.values
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(
+                              p.name[0].toUpperCase() + p.name.substring(1),
+                            ),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (p) => priority = p ?? priority,
                   ),
+                  const SizedBox(height: 16),
+                  if (existing != null && existing.timesSeconds.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Recorded Times:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: existing.timesSeconds.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final t = existing.timesSeconds[index];
+                              final dur = Duration(seconds: t);
+                              final formatted =
+                                  '${dur.inMinutes}m ${(dur.inSeconds % 60).toString().padLeft(2, '0')}s';
+
+                              return ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(formatted),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline,
+                                      color: Colors.red),
+                                  tooltip: 'Delete this time',
+                                  onPressed: () async {
+                                    final confirm =
+                                        await showDialog<bool>(
+                                              context: context,
+                                              builder: (_) => AlertDialog(
+                                                title:
+                                                    const Text('Delete Time?'),
+                                                content: Text(
+                                                    'Remove this recorded time ($formatted)?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                    child:
+                                                        const Text('Cancel'),
+                                                  ),
+                                                  FilledButton.tonal(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                    style:
+                                                        FilledButton.styleFrom(
+                                                      backgroundColor:
+                                                          Colors.red.shade600,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                    ),
+                                                    child:
+                                                        const Text('Delete'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ) ??
+                                            false;
+
+                                    if (confirm) {
+                                      existing.timesSeconds.removeAt(index);
+                                      await existing.save();
+                                      setStateDialog(() {});
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -181,14 +263,14 @@ class _EditChoresPageState extends State<EditChoresPage> {
                   if (name.isEmpty) return;
 
                   if (existing == null) {
-                    // create
-                    final id = DateTime.now().microsecondsSinceEpoch.toString();
+                    final id = DateTime.now()
+                        .microsecondsSinceEpoch
+                        .toString();
                     await box.put(
                       id,
                       Chore(id: id, name: name, priority: priority),
                     );
                   } else {
-                    // update
                     existing
                       ..name = name
                       ..priority = priority;
@@ -200,9 +282,13 @@ class _EditChoresPageState extends State<EditChoresPage> {
                 child: Text(existing == null ? 'Add' : 'Save'),
               ),
             ],
-          ),
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
+
 }
 
 class _ChoreTile extends StatelessWidget {
