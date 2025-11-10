@@ -1,12 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
+import 'package:confetti/confetti.dart';
 import 'package:tempochores_app/models/chore.dart';
-import 'package:tempochores_app/models/priority.dart';
 import 'package:tempochores_app/providers/timer_provider.dart';
 import 'package:tempochores_app/theme/colors.dart';
-import 'package:tempochores_app/components/chores_selector.dart';
 import 'package:tempochores_app/components/time_slider.dart';
+import 'package:tempochores_app/data/chore_repository.dart';
+import 'package:tempochores_app/pages/due_chores_page.dart';
 
 class PlanTempoChorePage extends StatefulWidget {
   const PlanTempoChorePage({super.key});
@@ -17,346 +19,374 @@ class PlanTempoChorePage extends StatefulWidget {
 
 class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
   int minutes = 0;
-  bool _timerRunning = false;
-  bool _hasLoaded = false;
+  List<Chore> _dueChores = [];
+  List<Chore> _plannedChores = [];
+  late ConfettiController _confettiController;
+  late StreamSubscription _watcher;
 
-  Set<String> _selectedIds = {};
-  List<Chore> _allChores = [];
-  List<Chore> _displayChores = [];
+  final _repo = ChoreRepository();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _loadAllChores();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
+    _loadSelectedChores();
+
+    final settingsBox = Hive.box('settings');
+    _watcher = settingsBox.watch(key: 'selectedChores').listen((_) {
+      _loadSelectedChores();
+    });
   }
 
-  void _loadAllChores() {
-    final box = Hive.box<Chore>('chores');
-    final chores = box.values.toList();
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _watcher.cancel();
+    _confettiController.dispose();
+    super.dispose();
+  }
 
-    chores.sort((a, b) {
-      final pComp = b.priority.index.compareTo(a.priority.index);
-      if (pComp != 0) return pComp;
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-    });
-
+  void _loadSelectedChores() {
+    final choresBox = Hive.box<Chore>('chores');
+    final selectedIds = Hive.box('settings').get('selectedChores') ?? [];
     setState(() {
-      _allChores = chores;
-      _displayChores = chores;
-      _selectedIds.clear();
-      _timerRunning = false;
-      _hasLoaded = false;
-      minutes = 0;
+      _dueChores = choresBox.values
+          .where((c) => selectedIds.contains(c.id))
+          .toList();
+      _plannedChores = [];
     });
   }
 
-  void _loadChores() {
-    if (_selectedIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select chores first.')),
-      );
-      return;
-    }
-
-    final selected = _allChores
-        .where((c) => _selectedIds.contains(c.id))
+  void _planChoresForTime(int minutes) {
+    final available = Duration(seconds: minutes * 60);
+    final prioritized = _repo.getPrioritizedChores(available);
+    final planned = prioritized
+        .where((c) => _dueChores.any((d) => d.id == c.id))
         .toList();
 
-    selected.sort((a, b) => b.priority.index.compareTo(a.priority.index));
+    setState(() => _plannedChores = planned);
+  }
 
-    final high = selected.where((c) => c.priority == Priority.high).toList();
-    final med = selected.where((c) => c.priority == Priority.medium).toList();
-    final low = selected.where((c) => c.priority == Priority.low).toList();
+  void _completeChore(TimerProvider timer, Chore chore) {
+    if (timer.completedIds.contains(chore.id)) return;
+    timer.completeChore(chore);
 
-    for (final list in [high, med, low]) {
-      list.sort((a, b) => a.averageDuration.compareTo(b.averageDuration));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.secondary,
+        content: Text(
+          '✅ ${chore.name} completed!',
+          style: const TextStyle(color: Colors.white),
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    if (timer.completedIds.length == timer.plannedIds.length) {
+      _triggerCelebration(timer);
     }
+  }
 
-    List<Chore> chosen = [];
-    var remaining = Duration(minutes: minutes);
+  Future<void> _triggerCelebration(TimerProvider timer) async {
+    timer.stop();
+    _confettiController.play();
 
-    for (final c in [...high, ...med, ...low]) {
-      final dur = c.averageDuration;
-      if (dur.inSeconds > 0 && dur <= remaining) {
-        chosen.add(c);
-        remaining -= dur;
-      }
-    }
+    final completedIds = List<String>.from(timer.plannedIds);
+    final settingsBox = Hive.box('settings');
+    final currentSelected =
+        List<String>.from(settingsBox.get('selectedChores', defaultValue: []));
+    currentSelected.removeWhere((id) => completedIds.contains(id));
+    await settingsBox.put('selectedChores', currentSelected);
 
-    if (chosen.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No chores fit in that time window.')),
-      );
-      return;
-    }
+    if (!mounted) return;
 
     setState(() {
-      _displayChores = chosen;
-      _hasLoaded = true;
-      _selectedIds.clear();
+      _plannedChores.clear();
+      _dueChores.removeWhere((c) => completedIds.contains(c.id));
     });
-  }
 
-  void _startTimer(BuildContext context) {
-    final timer = context.read<TimerProvider>();
-    timer.start(minutes);
-    timer.resetCompletionTracking();
-    setState(() => _timerRunning = true);
-
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (_selectedIds.length == _displayChores.length &&
-          _displayChores.isNotEmpty) {
-        timer.stop();
-        timer.resetCompletionTracking();
-
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('TempoChore Complete!'),
-              content: const Text('You finished all your chores within the time limit!'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _resetAll();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          "🎉 All Chores Done!",
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          "You finished your Tempo session with time to spare! 👏",
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          FilledButton(
+            onPressed: () {
+              _confettiController.stop();
+              Navigator.of(context).pop();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.greenAccent.shade400,
+              foregroundColor: Colors.black,
             ),
-          );
-        }
-        return false;
-      }
-
-      // stop loop if time runs out
-      if (!timer.running && timer.remaining == Duration.zero) {
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Time’s up!'),
-              content: const Text('You ran out of time. Try again next session!'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _resetAll();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        }
-        return false;
-      }
-
-      return true;
-    });
-  }
-
-  void _resetAll() {
-    final timer = context.read<TimerProvider>();
-    timer.stop();
-    timer.resetCompletionTracking();
-    _loadAllChores();
+            child: const Text("Nice!"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final timer = context.watch<TimerProvider>();
+    final timer = Provider.of<TimerProvider>(context);
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
+        centerTitle: true,
+        foregroundColor: AppColors.secondary,
+        elevation: 5,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset('assets/images/TempoChoresLogo.png', height: 40),
             const SizedBox(width: 8),
-            const Text('Plan TempoChore'),
+            const Text('Plan Tempo Chore'),
           ],
         ),
-        centerTitle: true,
-        foregroundColor: AppColors.secondary,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // TIME SLIDER
-            SizedBox(
-              width: MediaQuery.sizeOf(context).width * 0.9,
-              height: MediaQuery.sizeOf(context).height * 0.15,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'I have ',
-                    style: TextStyle(
-                      fontSize: 30,
-                      shadows: [
-                        Shadow(offset: Offset(3, 3), blurRadius: 5, color: Colors.black54),
-                        Shadow(offset: Offset(-3, -3), blurRadius: 5, color: Colors.black54),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IgnorePointer(
-                    ignoring: _timerRunning,
-                    child: Opacity(
-                      opacity: _timerRunning ? 0.5 : 1,
-                      child: TimeSlider(
-                        initialValue: minutes,
-                        onChanged: (v) => setState(() => minutes = v),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    ' minutes',
-                    style: TextStyle(
-                      fontSize: 30,
-                      shadows: [
-                        Shadow(offset: Offset(3, 3), blurRadius: 5, color: Colors.black54),
-                        Shadow(offset: Offset(-3, -3), blurRadius: 5, color: Colors.black54),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            emissionFrequency: 0.05,
+            numberOfParticles: 25,
+            maxBlastForce: 20,
+            minBlastForce: 10,
+            gravity: 0.2,
+            colors: const [
+              Colors.greenAccent,
+              Colors.yellow,
+              Colors.blueAccent,
+              Colors.pinkAccent,
+              Colors.orange,
+            ],
+          ),
 
-            // TIMER DISPLAY
-            Text(
-              timer.running
-                  ? '${timer.remaining.inMinutes}:${(timer.remaining.inSeconds % 60).toString().padLeft(2, '0')} left'
-                  : (timer.remaining > Duration.zero
-                      ? ''
-                      : 'Timer stopped'),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-
-            // CHORES LIST
-            SizedBox(
-              width: MediaQuery.sizeOf(context).width * 0.9,
-              height: MediaQuery.sizeOf(context).height * 0.4,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(_hasLoaded
-                      ? 'Chores for this session:'
-                      : 'Select chores to consider:'),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ChoresSelector(
-                      items: _displayChores,
-                      selectedIds: _selectedIds,
-                      onChanged: (ids) => setState(() => _selectedIds = ids),
-                      showSearch: true,
-                      emptyLabel: 'No chores available',
-                      title: 'Available chores',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ACTION BUTTONS
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  if (!_timerRunning && !_hasLoaded)
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        height: MediaQuery.sizeOf(context).height * 0.08,
-                        child: ElevatedButton(
-                          onPressed: _loadChores,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueGrey[700],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            elevation: 6,
-                          ),
-                          child: const Text(
-                            'Load',
+          _dueChores.isEmpty
+              ? _buildEmptyState()
+              : Column(
+                  children: [
+                    // Timer and slider
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            timer.running
+                                ? 'Time Remaining'
+                                : 'How much time do you have?',
                             style: TextStyle(
-                              fontSize: 22,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.secondary,
-                              fontWeight: FontWeight.w600,
+                              shadows: const [
+                                Shadow(
+                                    offset: Offset(3, 3),
+                                    blurRadius: 15,
+                                    color: Colors.black54),
+                                Shadow(
+                                    offset: Offset(-3, -3),
+                                    blurRadius: 15,
+                                    color: Colors.black54),
+                              ],
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          if (timer.running)
+                            Text(
+                              "${timer.remaining.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(timer.remaining.inSeconds.remainder(60)).toString().padLeft(2, '0')}",
+                              style: const TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.greenAccent,
+                                shadows: [
+                                  Shadow(
+                                      offset: Offset(2, 2),
+                                      blurRadius: 10,
+                                      color: Colors.black54)
+                                ],
+                              ),
+                            )
+                          else
+                            Column(
+                              children: [
+                                TimeSlider(
+                                  initialValue: minutes,
+                                  onChanged: (val) {
+                                    _debounce?.cancel();
+                                    _debounce = Timer(
+                                        const Duration(milliseconds: 150), () {
+                                      setState(() => minutes = val);
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Selected: $minutes minutes',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
                     ),
-                  if (!_timerRunning)
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        height: MediaQuery.sizeOf(context).height * 0.08,
-                        child: ElevatedButton(
-                          onPressed: _displayChores.isNotEmpty
-                              ? () => _startTimer(context)
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _displayChores.isNotEmpty
-                                ? AppColors.primary
-                                : Colors.grey[700],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+
+                    // Buttons
+                    if (!timer.running)
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                icon: const Icon(Icons.tune),
+                                label: const Text('Plan'),
+                                onPressed: minutes > 0 && _dueChores.isNotEmpty
+                                    ? () => _planChoresForTime(minutes)
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.orangeAccent,
+                                  foregroundColor: Colors.black,
+                                  elevation: 5,
+                                ),
+                              ),
                             ),
-                            elevation: 6,
-                          ),
-                          child: Text(
-                            'Go!',
-                            style: TextStyle(
-                              fontSize: 22,
-                              color: _displayChores.isNotEmpty
-                                  ? AppColors.secondary
-                                  : Colors.white70,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton.icon(
+                                icon: const Icon(Icons.timer),
+                                label: const Text('Start Timer'),
+                                onPressed: minutes > 0 &&
+                                        _plannedChores.isNotEmpty
+                                    ? () => timer.start(minutes, _plannedChores)
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.greenAccent.shade400,
+                                  foregroundColor: Colors.black,
+                                  elevation: 5,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    )
-                  else
+
+                    const SizedBox(height: 12),
+
+                    // Chore list
                     Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        height: MediaQuery.sizeOf(context).height * 0.08,
-                        child: ElevatedButton(
-                          onPressed: _resetAll,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent[700],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                      child: ListView.builder(
+                        itemCount: _plannedChores.length,
+                        itemBuilder: (context, index) {
+                          final chore = _plannedChores[index];
+                          final isDone =
+                              timer.completedIds.contains(chore.id);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isDone
+                                  ? Colors.greenAccent.withValues(alpha: 0.2)
+                                  : Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                    offset: Offset(3, 3),
+                                    blurRadius: 15,
+                                    color: Colors.black54),
+                                BoxShadow(
+                                    offset: Offset(-3, -3),
+                                    blurRadius: 15,
+                                    color: Colors.black54),
+                              ],
                             ),
-                            elevation: 6,
-                          ),
-                          child: const Text(
-                            'Reset',
-                            style: TextStyle(
-                              fontSize: 22,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                            child: ListTile(
+                              title: Text(
+                                chore.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  decoration: isDone
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: isDone
+                                      ? Colors.green.shade700
+                                      : AppColors.secondary,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Avg: ${chore.averageDuration.inMinutes} min • ${chore.priority.name}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              trailing: timer.running && !isDone
+                                  ? IconButton(
+                                      icon: const Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.greenAccent,
+                                      ),
+                                      onPressed: () =>
+                                          _completeChore(timer, chore),
+                                    )
+                                  : null,
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
-                ],
-              ),
+                  ],
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            "No chores marked as due yet.",
+            style: TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DueChoresPage()),
+              );
+            },
+            icon: const Icon(Icons.playlist_add),
+            label: const Text("Select Due Chores"),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.greenAccent.shade400,
+              foregroundColor: Colors.black,
+              elevation: 5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

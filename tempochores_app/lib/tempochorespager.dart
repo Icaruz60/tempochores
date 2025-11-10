@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tempochores_app/pages/edit_chores_page.dart';
 import 'package:tempochores_app/pages/plan_tempochore_page.dart';
 import 'package:tempochores_app/pages/time_chore_page.dart';
+import 'package:tempochores_app/pages/due_chores_page.dart';
 
 class TempoChoresPager extends StatefulWidget {
   const TempoChoresPager({super.key});
@@ -18,6 +19,7 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
     'Plan TempoChore',
     'Time Chore',
     'Edit Chores',
+    'Due chores'
   ];
 
   @override
@@ -38,6 +40,7 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
           _KeepAlive(child: PlanTempoChorePage()), // left
           _KeepAlive(child: TimeChorePage()), // middle
           _KeepAlive(child: EditChoresPage()), // right
+          _KeepAlive(child: DueChoresPage()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -53,6 +56,7 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
           NavigationDestination(icon: Icon(Icons.event_note), label: 'Plan'),
           NavigationDestination(icon: Icon(Icons.timer), label: 'Time'),
           NavigationDestination(icon: Icon(Icons.edit), label: 'Edit'),
+          NavigationDestination(icon: Icon(Icons.assignment), label: 'Due'),
         ],
       ),
     );

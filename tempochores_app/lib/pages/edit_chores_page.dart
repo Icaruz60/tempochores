@@ -152,7 +152,7 @@ class _EditChoresPageState extends State<EditChoresPage> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<Priority>(
-                    value: priority,
+                    initialValue: priority,
                     decoration: const InputDecoration(labelText: 'Priority'),
                     items:
                         Priority.values
