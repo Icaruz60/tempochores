@@ -154,21 +154,21 @@ Future<void> _showChoreDialog(BuildContext context, {Chore? existing}) async {
                     decoration: const InputDecoration(labelText: 'Chore name'),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<Priority>(
-                    value: priority,
-                    decoration: const InputDecoration(labelText: 'Priority'),
-                    items: Priority.values
-                        .map(
-                          (p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(
-                              p.name[0].toUpperCase() + p.name.substring(1),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (p) => priority = p ?? priority,
-                  ),
+                  // DropdownButtonFormField<Priority>(
+                  //   value: priority,
+                  //   decoration: const InputDecoration(labelText: 'Priority'),
+                  //   items: Priority.values
+                  //       .map(
+                  //         (p) => DropdownMenuItem(
+                  //           value: p,
+                  //           child: Text(
+                  //             p.name[0].toUpperCase() + p.name.substring(1),
+                  //           ),
+                  //         ),
+                  //       )
+                  //       .toList(),
+                  //   onChanged: (p) => priority = p ?? priority,
+                  // ),
                   const SizedBox(height: 16),
                   if (existing != null && existing.timesSeconds.isNotEmpty)
                     Column(
@@ -322,7 +322,7 @@ class _ChoreTile extends StatelessWidget {
 
           child: Row(
             children: [
-              _PriorityPill(priority: chore.priority),
+              // _PriorityPill(priority: chore.priority),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -434,56 +434,56 @@ class _ChoreTile extends StatelessWidget {
   }
 }
 
-class _PriorityPill extends StatelessWidget {
-  const _PriorityPill({required this.priority});
-  final Priority priority;
+// class _PriorityPill extends StatelessWidget {
+//   const _PriorityPill({required this.priority});
+//   final Priority priority;
 
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (priority) {
-      Priority.high => 'High',
-      Priority.medium => 'Med',
-      Priority.low => 'Low',
-    };
+//   @override
+//   Widget build(BuildContext context) {
+//     final label = switch (priority) {
+//       Priority.high => 'High',
+//       Priority.medium => 'Med',
+//       Priority.low => 'Low',
+//     };
 
-    final color = switch (priority) {
-      Priority.high => Colors.redAccent,
-      Priority.medium => Colors.orangeAccent,
-      Priority.low => Colors.greenAccent,
-    };
+//     final color = switch (priority) {
+//       Priority.high => Colors.redAccent,
+//       Priority.medium => Colors.orangeAccent,
+//       Priority.low => Colors.greenAccent,
+//     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          shadows: [
-            Shadow(offset: Offset(3, 3), blurRadius: 15, color: Colors.black54),
-            Shadow(
-              offset: Offset(-3, -3),
-              blurRadius: 15,
-              color: Colors.black54,
-            ),
-            Shadow(
-              offset: Offset(3, -3),
-              blurRadius: 15,
-              color: Colors.black54,
-            ),
-            Shadow(
-              offset: Offset(-3, 3),
-              blurRadius: 15,
-              color: Colors.black54,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//       decoration: BoxDecoration(
+//         color: color.withValues(alpha: 0.2),
+//         borderRadius: BorderRadius.circular(999),
+//         border: Border.all(color: color, width: 1),
+//       ),
+//       child: Text(
+//         label,
+//         style: Theme.of(context).textTheme.labelMedium?.copyWith(
+//           color: Colors.white,
+//           fontWeight: FontWeight.w600,
+//           shadows: [
+//             Shadow(offset: Offset(3, 3), blurRadius: 15, color: Colors.black54),
+//             Shadow(
+//               offset: Offset(-3, -3),
+//               blurRadius: 15,
+//               color: Colors.black54,
+//             ),
+//             Shadow(
+//               offset: Offset(3, -3),
+//               blurRadius: 15,
+//               color: Colors.black54,
+//             ),
+//             Shadow(
+//               offset: Offset(-3, 3),
+//               blurRadius: 15,
+//               color: Colors.black54,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
