@@ -159,7 +159,7 @@ class ChoreDropdown extends StatelessWidget {
                                 value: c,
                                 child: Row(
                                   children: [
-                                    _PriorityPillMini(priority: c.priority),
+                                    // _PriorityPillMini(priority: c.priority),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
@@ -230,43 +230,43 @@ extension _FirstOrNull<T> on Iterable<T> {
 
 // --- helpers used by the menu rows ---
 
-class _PriorityPillMini extends StatelessWidget {
-  const _PriorityPillMini({required this.priority});
-  final Priority priority;
+// class _PriorityPillMini extends StatelessWidget {
+//   const _PriorityPillMini({required this.priority});
+//   final Priority priority;
 
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (priority) {
-      Priority.high => 'High',
-      Priority.medium => 'Med',
-      Priority.low => 'Low',
-    };
-    final color = switch (priority) {
-      Priority.high => Colors.redAccent,
-      Priority.medium => Colors.orangeAccent,
-      Priority.low => Colors.greenAccent,
-    };
+//   @override
+//   Widget build(BuildContext context) {
+//     final label = switch (priority) {
+//       Priority.high => 'High',
+//       Priority.medium => 'Med',
+//       Priority.low => 'Low',
+//     };
+//     final color = switch (priority) {
+//       Priority.high => Colors.redAccent,
+//       Priority.medium => Colors.orangeAccent,
+//       Priority.low => Colors.greenAccent,
+//     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          shadows: const [
-            Shadow(offset: Offset(1, 1), blurRadius: 6, color: Colors.black54),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//       decoration: BoxDecoration(
+//         color: color.withValues(alpha: 0.18),
+//         borderRadius: BorderRadius.circular(999),
+//         border: Border.all(color: color, width: 1),
+//       ),
+//       child: Text(
+//         label,
+//         style: Theme.of(context).textTheme.labelSmall?.copyWith(
+//           color: Colors.white,
+//           fontWeight: FontWeight.w600,
+//           shadows: const [
+//             Shadow(offset: Offset(1, 1), blurRadius: 6, color: Colors.black54),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _StatsBadge extends StatelessWidget {
   const _StatsBadge({required this.chore});

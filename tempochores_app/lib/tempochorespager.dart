@@ -15,13 +15,6 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
   final _controller = PageController(initialPage: 1); // middle = Time Chore
   int _index = 1;
 
-  static const _titles = <String>[
-    'Plan TempoChore',
-    'Time Chore',
-    'Edit Chores',
-    'Due chores'
-  ];
-
   @override
   void dispose() {
     _controller.dispose();
@@ -31,16 +24,15 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_index]), centerTitle: true),
       body: PageView(
         controller: _controller,
         onPageChanged: (i) => setState(() => _index = i),
         physics: const PageScrollPhysics(), // swipable
         children: const [
           _KeepAlive(child: PlanTempoChorePage()), // left
+          _KeepAlive(child: DueChoresPage()),
           _KeepAlive(child: TimeChorePage()), // middle
           _KeepAlive(child: EditChoresPage()), // right
-          _KeepAlive(child: DueChoresPage()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -54,9 +46,9 @@ class _TempoChoresPagerState extends State<TempoChoresPager> {
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.event_note), label: 'Plan'),
+          NavigationDestination(icon: Icon(Icons.assignment), label: 'Due'),
           NavigationDestination(icon: Icon(Icons.timer), label: 'Time'),
           NavigationDestination(icon: Icon(Icons.edit), label: 'Edit'),
-          NavigationDestination(icon: Icon(Icons.assignment), label: 'Due'),
         ],
       ),
     );

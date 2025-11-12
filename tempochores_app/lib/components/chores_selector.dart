@@ -145,61 +145,60 @@ class _ChoresSelectorState extends State<ChoresSelector> {
                                 ],
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          _PriorityPill(priority: chore.priority),
-                        ],
-                      ),
-                      subtitle: Text(
-                        _fmtDurationShort(chore.averageDuration),
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: Theme.of(context).hintColor),
-                      ),
-                    );
-                  },
-                ),
+                            const SizedBox(width: 8),
+                            // _PriorityPill(priority: chore.priority),
+                          ],
+                        ),
+                        subtitle: Text(
+                          _fmtDurationShort(chore.averageDuration),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: Theme.of(context).hintColor),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ],
     );
   }
 }
 
-class _PriorityPill extends StatelessWidget {
-  const _PriorityPill({required this.priority});
-  final Priority priority;
+// class _PriorityPill extends StatelessWidget {
+//   const _PriorityPill({required this.priority});
+//   final Priority priority;
 
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (priority) {
-      Priority.low => 'Low',
-      Priority.medium => 'Medium',
-      Priority.high => 'High',
-    };
-    final color = switch (priority) {
-      Priority.low => Colors.green,
-      Priority.medium => Colors.orange,
-      Priority.high => Colors.red,
-    };
+//   @override
+//   Widget build(BuildContext context) {
+//     final label = switch (priority) {
+//       Priority.low => 'Low',
+//       Priority.medium => 'Medium',
+//       Priority.high => 'High',
+//     };
+//     final color = switch (priority) {
+//       Priority.low => Colors.green,
+//       Priority.medium => Colors.orange,
+//       Priority.high => Colors.red,
+//     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: ShapeDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: StadiumBorder(side: BorderSide(color: color.withValues(alpha: 0.6))),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-      ),
-    );
-  }
-}
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: ShapeDecoration(
+//         color: color.withValues(alpha: 0.12),
+//         shape: StadiumBorder(
+//           side: BorderSide(color: color.withValues(alpha: 0.6)),
+//         ),
+//       ),
+//       child: Text(
+//         label,
+//         style: Theme.of(context).textTheme.labelSmall?.copyWith(
+//           color: color,
+//           fontWeight: FontWeight.w600,
+//           letterSpacing: 0.2,
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 String _fmtDurationShort(Duration d) {
   if (d.inSeconds <= 0) return 'no time recorded';
