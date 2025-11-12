@@ -21,8 +21,7 @@ class _EditChoresPageState extends State<EditChoresPage> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.edit_note_rounded,
-                color: AppColors.secondary, size: 40),
+            Icon(Icons.edit_note_rounded, color: AppColors.secondary, size: 40),
             const SizedBox(width: 8),
             const Text('Edit Chores'),
           ],
@@ -121,39 +120,118 @@ class _EditChoresPageState extends State<EditChoresPage> {
 
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(existing == null ? 'Add Chore' : 'Edit Chore'),
-        content: SizedBox(
-          width: 380,
-          child: TextField(
-            controller: nameCtrl,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(labelText: 'Chore name'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text(existing == null ? 'Add Chore' : 'Edit Chore'),
+              content: SizedBox(
+                width: 380,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameCtrl,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(labelText: 'Chore name'),
+                    ),
+                    const SizedBox(height: 16),
 
-              if (existing == null) {
-                await repo.create(name);
-              } else {
-                existing.name = name;
-                await repo.upsert(existing);
-              }
+                    if (existing != null && existing.timesSeconds.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Recorded Times:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: existing.timesSeconds.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final t = existing.timesSeconds[index];
+                                final dur = Duration(seconds: t);
+                                final formatted =
+                                    '${dur.inMinutes}m ${(dur.inSeconds % 60).toString().padLeft(2, '0')}s';
 
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: Text(existing == null ? 'Add' : 'Save'),
-          ),
-        ],
-      ),
+                                return ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(formatted),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    tooltip: 'Delete this time',
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (_) => AlertDialog(
+                                              title: const Text('Delete Time?'),
+                                              content: Text('Remove this recorded time ($formatted)?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context, false),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                FilledButton.tonal(
+                                                  onPressed: () => Navigator.pop(context, true),
+                                                  style: FilledButton.styleFrom(
+                                                    backgroundColor: Colors.red.shade600,
+                                                    foregroundColor: Colors.white,
+                                                  ),
+                                                  child: const Text('Delete'),
+                                                ),
+                                              ],
+                                            ),
+                                          ) ??
+                                          false;
+
+                                      if (confirm) {
+                                        existing.removeTimeAt(index);
+                                        await repo.upsert(existing);
+                                        setStateDialog(() {});
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final name = nameCtrl.text.trim();
+                    if (name.isEmpty) return;
+
+                    if (existing == null) {
+                      await repo.create(name);
+                    } else {
+                      existing.name = name;
+                      await repo.upsert(existing);
+                    }
+
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Text(existing == null ? 'Add' : 'Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -197,11 +275,7 @@ class _ChoreTile extends StatelessWidget {
                             color: AppColors.secondary,
                             fontSize: 20,
                             shadows: const [
-                              Shadow(
-                                offset: Offset(3, 3),
-                                blurRadius: 15,
-                                color: Colors.black54,
-                              ),
+                              Shadow(offset: Offset(3, 3), blurRadius: 15, color: Colors.black54),
                             ],
                           ),
                     ),

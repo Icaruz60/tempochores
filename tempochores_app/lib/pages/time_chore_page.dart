@@ -112,7 +112,7 @@ class _TimeChorePageState extends State<TimeChorePage> {
               ),
             ),
 
-            // --- Timer Display ---
+            // --- Timer Display
             SizedBox(
               width: MediaQuery.sizeOf(context).width * 0.9,
               height: MediaQuery.sizeOf(context).height * 0.2,

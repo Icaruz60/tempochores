@@ -1,4 +1,5 @@
-import 'package:hive/hive.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/chore.dart';
 import '../models/priority.dart';
@@ -75,6 +76,8 @@ class ChoreRepository {
 
 
   Stream<BoxEvent> watch() => _box.watch();
+
+  ValueListenable<Box<Chore>> listen() => _box.listenable();
 
   int _priorityRank(Priority p) => switch (p) {
         Priority.high => 3,
