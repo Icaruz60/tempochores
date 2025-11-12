@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:tempochores_app/components/boxes.dart';
 import 'package:tempochores_app/components/storage_init.dart';
 import 'package:tempochores_app/providers/timer_provider.dart';
+import 'package:tempochores_app/data/chore_repository.dart';
+import 'package:tempochores_app/data/settings_repository.dart';
 import 'package:tempochores_app/tempochorespager.dart';
 import 'package:tempochores_app/theme/app_theme.dart';
 
@@ -16,9 +19,9 @@ Future<void> main() async {
     customOpeners: Boxes.customOpeners,
   );
 
-  // Make sure timerState box is open (for persistence)
-  if (!Hive.isBoxOpen('timerState')) {
-    await Hive.openBox('timerState');
+  // Make sure timer state box is open for session persistence
+  if (!Hive.isBoxOpen(Boxes.timerState)) {
+    await Hive.openBox(Boxes.timerState);
   }
 
   runApp(const TempoChoresApp());
@@ -40,6 +43,10 @@ class TempoChoresApp extends StatelessWidget {
             return provider;
           },
         ),
+
+        // Data Repositories
+        Provider(create: (_) => ChoreRepository()),
+        Provider(create: (_) => SettingsRepository()),
       ],
       child: MaterialApp(
         title: 'TempoChores',

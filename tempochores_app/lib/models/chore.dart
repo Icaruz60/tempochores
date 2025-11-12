@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:hive/hive.dart';
 import 'priority.dart';
 
@@ -14,30 +15,47 @@ class Chore extends HiveObject {
   @HiveField(2)
   Priority priority;
 
-  /// Each entry is total seconds for a recorded run.
+  /// Each entry = total seconds for one completed run.
   @HiveField(3)
-  List<int> timesSeconds;
+  final List<int> _timesSeconds;
 
   Chore({
     required this.id,
     required this.name,
     this.priority = Priority.medium,
     List<int>? timesSeconds,
-  }) : timesSeconds = timesSeconds ?? [];
+  }) : _timesSeconds = timesSeconds ?? [];
 
-  int get avgSeconds {
-    if (timesSeconds.isEmpty) return 0;
-    final sum = timesSeconds.fold<int>(0, (a, b) => a + b);
-    return sum ~/ timesSeconds.length;
-  }
+  // Read-only Views 
+  UnmodifiableListView<int> get timesSeconds =>
+      UnmodifiableListView(_timesSeconds);
+
+  int get runCount => _timesSeconds.length;
+  bool get hasHistory => _timesSeconds.isNotEmpty;
+
+  // Derived Metrics
+  int get totalSeconds =>
+      _timesSeconds.fold<int>(0, (sum, s) => sum + s);
+
+  int get avgSeconds =>
+      hasHistory ? totalSeconds ~/ runCount : 0;
 
   Duration get averageDuration => Duration(seconds: avgSeconds);
+  Duration get totalDuration => Duration(seconds: totalSeconds);
 
-  void addTime(Duration d) {
-    timesSeconds.add(d.inSeconds);
-  }
+  // Mutators 
+  void addTime(Duration d) => _timesSeconds.add(d.inSeconds);
 
   void removeTimeAt(int index) {
-    timesSeconds.removeAt(index);
+    if (index >= 0 && index < _timesSeconds.length) {
+      _timesSeconds.removeAt(index);
+    }
   }
+
+  void clearTimes() => _timesSeconds.clear();
+
+  // Utility 
+  @override
+  String toString() =>
+      'Chore(id: $id, name: $name, priority: $priority, runs: $runCount, avg: ${averageDuration.inSeconds}s)';
 }
