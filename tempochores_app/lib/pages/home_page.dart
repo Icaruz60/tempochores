@@ -28,7 +28,7 @@ class HomePage extends StatelessWidget {
           children: [
             MenuButton(
               title: 'Time a Chore',
-              imageAsset: 'assets/images/timechore_bg.jpg', // no leading slash
+              imageAsset: 'assets/images/timechore_bg.jpg',
               onPressed: () => Navigator.pushNamed(context, '/time'),
             ),
             MenuButton(

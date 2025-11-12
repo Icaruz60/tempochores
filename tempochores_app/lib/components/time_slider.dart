@@ -8,7 +8,7 @@ class TimeSlider extends StatefulWidget {
     this.max = 120,
     this.initialValue = 5,
     required this.onChanged,
-    this.height = 220,
+    this.height = 150,
     this.width = 72,
   }) : assert(initialValue >= 0);
 
@@ -69,10 +69,10 @@ class _TimeSliderState extends State<TimeSlider> {
           ListWheelScrollView.useDelegate(
             controller: _controller,
             physics: const FixedExtentScrollPhysics(),
-            itemExtent: 32,
-            diameterRatio: 1.8,
-            perspective: 0.002,
-            overAndUnderCenterOpacity: 0.35,
+            itemExtent: 40,
+            diameterRatio: 1.0,
+            perspective: 0.0005,
+            overAndUnderCenterOpacity: 0.10,
             onSelectedItemChanged: (idx) {
               final v = widget.min + idx;
               setState(() => _selected = v);
