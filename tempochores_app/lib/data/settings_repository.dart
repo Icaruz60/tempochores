@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // ✅ gives you .listenable()
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SettingsRepository {
   static const _boxName = 'settings';
@@ -22,5 +22,8 @@ class SettingsRepository {
 
   Future<void> clearSelections() async => _box.put(_selectedKey, []);
 
-  ValueListenable<Box> listen() => _box.listenable(); // ✅ works now
+  Future<void> setSelectedChores(List<String> ids) async =>
+      _box.put(_selectedKey, ids);
+
+  ValueListenable<Box> listen() => _box.listenable();
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tempochores_app/models/chore.dart';
-import 'package:tempochores_app/models/priority.dart';
 import 'package:tempochores_app/providers/timer_provider.dart';
 import 'package:tempochores_app/data/chore_repository.dart';
 
@@ -129,26 +128,19 @@ class _ChoresSelectorState extends State<ChoresSelector> {
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                       dense: true,
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              chore.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: isChecked ? FontWeight.w600 : FontWeight.w400,
-                                decoration: isChecked ? TextDecoration.lineThrough : null,
-                                shadows: const [
-                                  Shadow(offset: Offset(3, 3), blurRadius: 5, color: Colors.black54),
-                                  Shadow(offset: Offset(-3, -3), blurRadius: 5, color: Colors.black54),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // _PriorityPill(priority: chore.priority),
+                      title: Text(
+                        chore.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: isChecked ? FontWeight.w600 : FontWeight.w400,
+                          decoration: isChecked ? TextDecoration.lineThrough : null,
+                          shadows: const [
+                            Shadow(offset: Offset(3, 3), blurRadius: 5, color: Colors.black54),
+                            Shadow(offset: Offset(-3, -3), blurRadius: 5, color: Colors.black54),
                           ],
                         ),
+                      ),
                         subtitle: Text(
                           _fmtDurationShort(chore.averageDuration),
                           style: Theme.of(context).textTheme.labelSmall

@@ -76,7 +76,10 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
     final settings = context.read<SettingsRepository>();
 
     timer.stop();
-    await settings.clearSelections();
+
+    final currentSelected = List<String>.from(settings.selectedChores);
+    currentSelected.removeWhere((id) => _completed.contains(id));
+    await settings.setSelectedChores(currentSelected);
 
     if (!mounted) return; 
 
@@ -106,13 +109,18 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
     if (_completed.contains(chore.id)) return;
 
     final timer = context.read<TimerProvider>();
-    timer.completeChore(chore);
-    setState(() => _completed.add(chore.id));
 
     final diff = timer.consumeElapsed();
+
+    if (diff <= Duration.zero) return;
+
+    chore.addTime(diff);
+    chore.save();
+
+    setState(() => _completed.add(chore.id));
+
     final m = diff.inMinutes;
     final s = diff.inSeconds % 60;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Recorded ${m}m ${s}s for "${chore.name}"'),
@@ -121,11 +129,15 @@ class _PlanTempoChorePageState extends State<PlanTempoChorePage> {
       ),
     );
 
-    
+    timer.resetCompletionTracking();
+
+
     if (_completed.length == _planned.length && _planned.isNotEmpty) {
       _endTempo(success: true);
     }
   }
+  
+
 
 
   void _showDialog(BuildContext ctx, String title, String message) {

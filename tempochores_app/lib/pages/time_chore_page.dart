@@ -120,7 +120,7 @@ class _TimeChorePageState extends State<TimeChorePage> {
                 controller: _timerCtrl,
                 running: _timerRunning,
                 startFrom: _elapsed,
-                onTick: (d) => _elapsed = d,
+                onTick: (d) => setState(() => _elapsed = d),
               ),
             ),
 
