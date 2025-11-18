@@ -7,17 +7,22 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Let FlutterAppDelegate build the UIWindow/FlutterViewController first.
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
-    if let flutterRegistry = window?.rootViewController as? FlutterPluginRegistry {
-      GeneratedPluginRegistrant.register(with: flutterRegistry)
+    // Ensure we have a concrete FlutterViewController before registering plugins.
+    let flutterRegistry: FlutterPluginRegistry
+    if let existingController = window?.rootViewController as? FlutterPluginRegistry {
+      flutterRegistry = existingController
     } else {
-      // Fallback so hot-reload/dev builds still work if the view controller
-      // has not been attached yet.
-      GeneratedPluginRegistrant.register(with: self)
+      let controller = FlutterViewController()
+      let newWindow = UIWindow(frame: UIScreen.main.bounds)
+      newWindow.rootViewController = controller
+      newWindow.makeKeyAndVisible()
+      window = newWindow
+      flutterRegistry = controller
     }
 
+    GeneratedPluginRegistrant.register(with: flutterRegistry)
     return result
   }
 }
