@@ -1,7 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Control bar that shows a big Start button initially,
-/// then switches to [Cancel] [Done!] [Pause] row while running.
+
+
 class TimerControlBar extends StatefulWidget {
   const TimerControlBar({
     super.key,
@@ -25,8 +26,8 @@ class _TimerControlBarState extends State<TimerControlBar> {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width * 0.9;
-    final h = MediaQuery.sizeOf(context).height * 0.3;
+  final w = MediaQuery.sizeOf(context).width * 0.9;
+  final h = math.min(MediaQuery.sizeOf(context).height * 0.14, 140.0);
 
     return SizedBox(
       width: w,
@@ -56,9 +57,12 @@ class _TimerControlBarState extends State<TimerControlBar> {
         widget.onStart();
         setState(() => _running = true);
       },
-      child: const Text(
-        'Start',
-        style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        child: Text(
+          'Start',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -116,12 +120,12 @@ class _TimerControlBarState extends State<TimerControlBar> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(vertical: 12),
           ),
           onPressed: onPressed,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
       ),

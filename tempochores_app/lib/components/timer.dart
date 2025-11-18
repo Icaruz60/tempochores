@@ -1,4 +1,4 @@
-// lib/components/timer.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tempochores_app/theme/colors.dart';
@@ -118,7 +118,7 @@ class _TimerDisplayState extends State<TimerDisplay> {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'ChakraPetch',
-          fontSize: 72,
+          fontSize: 40,
           letterSpacing: 2,
           color: AppColors.secondary,
           shadows: const [
